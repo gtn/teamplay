@@ -80,7 +80,7 @@ $functions = array(
         ),
         'block_teamplay_get_my_pending_actions' => array(
         		'classname'   => 'block_teamplay_external',
-        		'methodname'  => 'get_pending_actions',
+        		'methodname'  => 'get_my_pending_actions',
         		'classpath'   => 'blocks/teamplay/externallib.php',
         		'description' => 'Lists all my requests and gestures that are not confirmed yet',
         		'type'        => 'read'

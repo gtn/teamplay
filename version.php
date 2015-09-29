@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2015092901;        // The current plugin version (Date: YYYYMMDDXX)
+$plugin->version   = 2015092900;        // The current plugin version (Date: YYYYMMDDXX)
 $plugin->component = 'block_teamplay'; 	// Full name of the plugin (used for diagnostics)
 
 $plugin->maturity = MATURITY_STABLE;
