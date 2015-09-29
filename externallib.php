@@ -186,6 +186,8 @@ class block_teamplay_external extends external_api {
 				'text2' => $text2
 		) );
 		
+		block_teamplay_external::updateScore($USER->id, 1);
+		
 		return "success";
 	}
 	
@@ -304,6 +306,10 @@ class block_teamplay_external extends external_api {
 				return "error";
 			}
 			$gesture->valid = ($confirmed) ? 1 : 2;
+			
+			if($confirmed)
+				block_teamplay_external::updateScore($gesture->sender, 10);
+				
 			$DB->update_record ( 'block_teamplaygestures', $gesture );
 		} else {
 			$request = $DB->get_record ( 'block_teamplayrequests', array (
@@ -313,8 +319,14 @@ class block_teamplay_external extends external_api {
 				return "error";
 			}
 			$request->valid = ($confirmed) ? 1 : 2;
+			
+			if($confirmed)
+				block_teamplay_external::updateScore($request->receiver, 10);
+				
 			$DB->update_record ( 'block_teamplayrequests', $request );
 		}
+		
+		block_teamplay_external::updateScore($USER->id, 3);
 		
 		return "success";
 	}
@@ -390,6 +402,8 @@ class block_teamplay_external extends external_api {
 				'text' => $text 
 		) );
 		
+		block_teamplay_external::updateScore($USER->id, 1);
+		
 		return "success";
 	}
 	
@@ -400,5 +414,182 @@ class block_teamplay_external extends external_api {
 	 */
 	public static function send_new_request_returns() {
 		return new external_value ( PARAM_TEXT, 'success' );
+	}
+	
+	/**
+	 * Returns description of method parameters
+	 *
+	 * @return external_function_parameters
+	 */
+	public static function get_my_pending_actions_parameters() {
+		return new external_function_parameters ( array () );
+	}
+	
+	/**
+	 * Returns welcome message
+	 *
+	 * @return string welcome message
+	 */
+	public static function get_my_pending_actions() {
+		global $CFG, $DB, $USER;
+	
+		$returndata = array ();
+	
+		$gestures = $DB->get_records ( 'block_teamplaygestures', array (
+				'sender' => $USER->id,
+				'valid' => 0
+		) );
+	
+		foreach ( $gestures as $gesture ) {
+			$returndataObject = new stdClass ();
+			$returndataObject->to = fullname ( $DB->get_record ( 'user', array (
+					'id' => $gesture->reciever
+			) ) );
+			$returndataObject->text = $gesture->text;
+			if(isset($gesture->text2))
+				$returndataObject->text2 = $gesture->text2;
+			else
+				$returndataObject->text2 = "";
+				
+			$returndataObject->id = $gesture->id;
+			$returndataObject->isGesture = true;
+			$returndata [] = $returndataObject;
+		}
+	
+		$gestures = $DB->get_records ( 'block_teamplayrequests', array (
+				'reciever' => $USER->id,
+				'valid' => 0
+		) );
+	
+		foreach ( $gestures as $gesture ) {
+			$returndataObject = new stdClass ();
+			$returndataObject->to = fullname ( $DB->get_record ( 'user', array (
+					'id' => $gesture->sender
+			) ) );
+			$returndataObject->text = $gesture->text;
+			$returndataObject->text2 = "";
+			$returndataObject->id = $gesture->id;
+			$returndataObject->isGesture = false;
+			$returndata [] = $returndataObject;
+		}
+		return $returndata;
+	}
+	
+	/**
+	 * Returns description of method result value
+	 *
+	 * @return external_description
+	 */
+	public static function get_my_pending_actions_returns() {
+		return new external_multiple_structure ( new external_single_structure ( array (
+				'to' => new external_value ( PARAM_TEXT, 'name of user' ),
+				'isGesture' => new external_value ( PARAM_BOOL, 'true if gesture, false if request' ),
+				'text' => new external_value ( PARAM_TEXT, 'text' ),
+				'text2' => new external_value ( PARAM_TEXT, 'text2' ),
+				'id' => new external_value ( PARAM_INT, 'id of gesture or request' )
+		) ) );
+	}
+	
+
+	/**
+	 * Returns description of method parameters
+	 *
+	 * @return external_function_parameters
+	 */
+	public static function cancel_parameters() {
+		return new external_function_parameters ( array (
+				'id' => new external_value ( PARAM_INT, 'gesture or request id' ),
+				'isGesture' => new external_value ( PARAM_BOOL, ' true if gesture, false if request' )
+		) );
+	}
+	
+	/**
+	 * Returns welcome message
+	 *
+	 * @return string welcome message
+	 */
+	public static function cancel($id, $isGesture) {
+		global $USER, $DB;
+	
+		if ($isGesture) {
+			$gesture = $DB->get_record ( 'block_teamplaygestures', array (
+					'id' => $id,
+					'valid' => 0
+			) );
+			if ($gesture->sender != $USER->id) {
+				return "error";
+			}
+			$DB->delete_records ( 'block_teamplaygestures', array('id' => $id) );
+		} else {
+			$request = $DB->get_record ( 'block_teamplayrequests', array (
+					'id' => $id,
+					'valid' => 0
+			) );
+			if ($request->reciever != $USER->id) {
+				return "error";
+			}
+			$request->reciever = 0;
+			
+			$DB->update_record ( 'block_teamplayrequests', $request );
+		}
+	
+		block_teamplay_external::updateScore($USER->id, -3);
+		
+		return "success";
+	}
+	
+	/**
+	 * Returns description of method result value
+	 *
+	 * @return external_description
+	 */
+	public static function cancel_returns() {
+		return new external_value ( PARAM_TEXT, 'success' );
+	}
+	
+	/**
+	 * Returns description of method parameters
+	 *
+	 * @return external_function_parameters
+	 */
+	public static function get_highscore_parameters() {
+		return new external_function_parameters ( array ( ) );
+	}
+	
+	/**
+	 * Returns welcome message
+	 *
+	 * @return string welcome message
+	 */
+	public static function get_highscore() {
+		global $USER, $DB;
+	
+		$score = $DB->get_record('block_teamplayhighscore', array('userid' => $USER->id));
+	
+		return $score->score;
+	}
+	
+	/**
+	 * Returns description of method result value
+	 *
+	 * @return external_description
+	 */
+	public static function get_highscore_returns() {
+		return new external_value ( PARAM_INT, 'score' );
+	}
+	
+	private static function updateScore($userid, $score) {
+		global $DB;
+		
+		$scoreRecord = $DB->get_record('block_teamplayhighscore', array("userid" => $userid));
+		if(!$scoreRecord) {
+			$DB->insert_record('block_teamplayhighscore', array('userid' => $userid, 'score' => ($score > 0) ? $score : 0));
+		} else {
+			$scoreRecord->score += $score;
+			if($scoreRecord->score < 0)
+				$scoreRecord->score = 0;
+			
+			$DB->update_record('block_teamplayhighscore', $scoreRecord);
+		}
 	}
 }

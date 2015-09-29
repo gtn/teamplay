@@ -77,6 +77,27 @@ $functions = array(
         		'classpath'   => 'blocks/teamplay/externallib.php',
         		'description' => 'Takes a certain request for a user',
         		'type'        => 'write'
+        ),
+        'block_teamplay_get_my_pending_actions' => array(
+        		'classname'   => 'block_teamplay_external',
+        		'methodname'  => 'get_pending_actions',
+        		'classpath'   => 'blocks/teamplay/externallib.php',
+        		'description' => 'Lists all my requests and gestures that are not confirmed yet',
+        		'type'        => 'read'
+        ),
+        'block_teamplay_cancel_my_action' => array(
+        		'classname'   => 'block_teamplay_external',
+        		'methodname'  => 'cancel',
+        		'classpath'   => 'blocks/teamplay/externallib.php',
+        		'description' => 'Cancel a request or gesture',
+        		'type'        => 'write'
+        ),
+        'block_teamplay_get_highscore' => array(
+        		'classname'   => 'block_teamplay_external',
+        		'methodname'  => 'get_highscore',
+        		'classpath'   => 'blocks/teamplay/externallib.php',
+        		'description' => 'Get highscore',
+        		'type'        => 'read'
         )
 );
 
@@ -84,14 +105,17 @@ $functions = array(
 $services = array(
         'teamplayservices' => array(
                 'functions' => array (
-                		'block_teamplay_get_gestures',
+                	'block_teamplay_get_gestures',
                 	'block_teamplay_get_users',
                 	'block_teamplay_send_new_gesture',
                 	'block_teamplay_get_my_confirmations',
                 	'block_teamplay_confirm',
                 	'block_teamplay_send_new_request',
                 	'block_teamplay_get_requests',
-                	'block_teamplay_take_request'),
+                	'block_teamplay_take_request',
+                	'block_teamplay_get_my_pending_actions',
+                	'block_teamplay_cancel_my_action',
+                	'block_teamplay_get_highscore'),
                 'restrictedusers' => 0,
                 'enabled'=>1,
         )
