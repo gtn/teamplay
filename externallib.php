@@ -233,7 +233,7 @@ class block_teamplay_external extends external_api {
 			if(isset($gesture->text2))
 				$returndataObject->text2 = $gesture->text2;
 			else
-				$returndataObject->text2 = "";
+				$returndataObject->text2 = $gesture->text;
 			
 			$returndataObject->id = $gesture->id;
 			$returndataObject->isGesture = true;
@@ -321,7 +321,7 @@ class block_teamplay_external extends external_api {
 			$request->valid = ($confirmed) ? 1 : 2;
 			
 			if($confirmed)
-				block_teamplay_external::updateScore($request->receiver, 10);
+				block_teamplay_external::updateScore($request->reciever, 10);
 				
 			$DB->update_record ( 'block_teamplayrequests', $request );
 		}
@@ -467,7 +467,7 @@ class block_teamplay_external extends external_api {
 					'id' => $gesture->sender
 			) ) );
 			$returndataObject->text = $gesture->text;
-			$returndataObject->text2 = "";
+			$returndataObject->text2 = $gesture->text;
 			$returndataObject->id = $gesture->id;
 			$returndataObject->isGesture = false;
 			$returndata [] = $returndataObject;
@@ -566,7 +566,10 @@ class block_teamplay_external extends external_api {
 	
 		$score = $DB->get_record('block_teamplayhighscore', array('userid' => $USER->id));
 	
-		return $score->score;
+		if(!$score)
+			return 0;
+		else
+			return $score->score;
 	}
 	
 	/**
