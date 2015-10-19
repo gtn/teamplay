@@ -131,7 +131,14 @@ class block_teamplay_external extends external_api {
 	public static function get_users() {
 		global $CFG, $DB, $USER;
 		
-		$students = $DB->get_records ( 'user' );
+		$my_global_groups = $DB->get_fieldset_select('cohort_members','cohortid','userid = ' . $USER->id);
+		
+		$students = $DB->get_records_sql (
+				'SELECT distinct u.id, u.firstname, u.lastname FROM {user} u
+				 JOIN {cohort_members} cm ON u.id = cm.userid
+				 WHERE cm.cohortid IN ( ? )
+				 GROUP BY u.id' , array(implode(",", $my_global_groups)));
+		
 		$returndata = array ();
 		
 		foreach ( $students as $student ) {
